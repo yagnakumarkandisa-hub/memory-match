@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Match Game</title>
+    <meta name="description" content="An exciting 2D memory card matching game featuring Solo, Time Attack, Me vs Computer AI, and Online Multiplayer." />
+    <meta property="og:title" content="Memory Match Game" />
+    <meta property="og:description" content="An exciting 2D memory card matching game featuring Solo, Time Attack, Me vs Computer AI, and Online Multiplayer." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- External stylesheet -->
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Confetti Canvas for Victory & Winner Celebrations -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Main Game Container -->
+    <main class="game-container">
+      <!-- Game Header -->
+      <header class="game-header">
+        <div class="header-top-row">
+          <div class="title-badge">
+            <span>🧠</span> Brain Challenge
+          </div>
+          <div id="online-status-badge" class="online-status-badge">
+            🟢 Online Ready
+          </div>
+        </div>
+        <h1 class="game-title">Memory Match</h1>
+        <p class="game-tagline">Flip, remember, and find all matching emoji pairs!</p>
+      </header>
+
+      <!-- Mode Selector Bar -->
+      <nav class="mode-selector-bar" aria-label="Game Mode">
+        <button type="button" class="mode-btn active" data-mode="solo">
+          <span>👤</span> Solo Casual
+        </button>
+        <button type="button" class="mode-btn" data-mode="time-attack">
+          <span>⚡</span> Time Attack
+        </button>
+        <button type="button" class="mode-btn" data-mode="bot">
+          <span>🤖</span> VS Computer
+        </button>
+        <button type="button" class="mode-btn" data-mode="multiplayer">
+          <span>👥</span> Pass & Play
+        </button>
+        <button type="button" class="mode-btn" data-mode="online">
+          <span>🌐</span> Online Match
+        </button>
+      </nav>
+
+      <!-- Online Lobby Panel (Active in Online Mode) -->
+      <section id="online-lobby-panel" class="online-lobby-panel" aria-label="Online Matchmaking Lobby">
+        <div class="lobby-header-row">
+          <span class="lobby-title"><span>🌐</span> Real-Time Online Multiplayer</span>
+        </div>
+
+        <div class="lobby-actions-grid">
+          <!-- Quick Match Card -->
+          <div class="lobby-card-box">
+            <span class="lobby-card-title">Instant Matchmaking</span>
+            <button type="button" id="quick-match-btn" class="btn btn-primary">
+              <span>⚡</span> Quick Match Now
+            </button>
+          </div>
+
+          <!-- Private Room Card -->
+          <div class="lobby-card-box">
+            <span class="lobby-card-title">Play With A Friend</span>
+            <div class="join-input-group">
+              <input type="text" id="room-input" class="room-input" placeholder="CODE" maxlength="4" aria-label="Room code" />
+              <button type="button" id="join-room-btn" class="btn btn-secondary">
+                Join
+              </button>
+            </div>
+            <button type="button" id="create-room-btn" class="btn btn-secondary">
+              <span>➕</span> Create New Room
+            </button>
+          </div>
+        </div>
+
+        <!-- Waiting for Player Radar Banner -->
+        <div id="waiting-room-banner" class="waiting-room-banner">
+          <div>
+            <span>📡 Waiting for an opponent to join...</span>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+              Share this code with your friend:
+            </div>
+          </div>
+          <span id="active-room-code" class="room-code-tag">----</span>
+        </div>
+      </section>
+
+      <!-- Multiplayer & AI HUD (Pass & Play, VS Computer, Online) -->
+      <section id="multiplayer-hud" class="multiplayer-hud" aria-label="Multiplayer Scoreboard">
+        <!-- Player 1 Box (Cyan) -->
+        <div id="p1-card" class="player-card p1-card active">
+          <div id="p1-avatar" class="player-avatar">🦊</div>
+          <div class="player-meta">
+            <div class="player-name-row">
+              <span id="p1-name" class="player-name">Player 1</span>
+              <span class="turn-pill">Turn</span>
+            </div>
+            <div class="player-stats-row">
+              <span>Score: <strong id="p1-score">0</strong></span>
+              <span>•</span>
+              <span>Pairs: <strong id="p1-pairs">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VS & Turn Timer Center Badge -->
+        <div class="vs-badge-container">
+          <span class="vs-badge">VS</span>
+          <span id="turn-timer-tag" class="turn-timer-tag">15s</span>
+        </div>
+
+        <!-- Player 2 / Bot Box -->
+        <div id="p2-card" class="player-card p2-card">
+          <div id="p2-avatar" class="player-avatar">🐼</div>
+          <div class="player-meta">
+            <div class="player-name-row">
+              <span id="p2-name" class="player-name">Player 2</span>
+              <span class="turn-pill">Turn</span>
+            </div>
+            <div class="player-stats-row">
+              <span>Score: <strong id="p2-score">0</strong></span>
+              <span>•</span>
+              <span>Pairs: <strong id="p2-pairs">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Turn Timer Visual Progress Bar -->
+        <div id="hud-turn-progress" class="hud-turn-progress"></div>
+      </section>
+
+      <!-- Controls Bar -->
+      <section class="controls-bar" aria-label="Game Controls">
+        <!-- Board Difficulty Selector -->
+        <div id="difficulty-group" class="difficulty-group" role="group" aria-label="Difficulty levels">
+          <button type="button" class="difficulty-btn" data-difficulty="easy">
+            <span>🌱</span> Easy (8)
+          </button>
+          <button type="button" class="difficulty-btn active" data-difficulty="medium">
+            <span>⚡</span> Medium (16)
+          </button>
+          <button type="button" class="difficulty-btn" data-difficulty="hard">
+            <span>🔥</span> Hard (24)
+          </button>
+        </div>
+
+        <!-- Bot Difficulty Selector (Only visible in VS Computer mode) -->
+        <div id="bot-difficulty-group" class="bot-difficulty-group" style="display: none;" role="group" aria-label="Bot difficulty">
+          <button type="button" class="bot-diff-btn" data-bot-diff="easy">
+            <span>🤖</span> Easy
+          </button>
+          <button type="button" class="bot-diff-btn active" data-bot-diff="medium">
+            <span>🧠</span> Medium
+          </button>
+          <button type="button" class="bot-diff-btn" data-bot-diff="hard">
+            <span>⚡</span> Expert
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button type="button" id="start-btn" class="btn btn-primary">
+            <span>▶</span> Start Game
+          </button>
+          <button type="button" id="restart-btn" class="btn btn-secondary">
+            <span>🔄</span> Restart
+          </button>
+          <button type="button" id="sound-toggle-btn" class="btn-icon-only" title="Sound On (Click to mute)" aria-label="Mute audio">
+            🔊
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats Dashboard -->
+      <section class="stats-dashboard" aria-label="Game Statistics">
+        <div id="timer-stat-card" class="stat-card">
+          <span class="stat-icon">⏱️</span>
+          <span id="timer-label" class="stat-label">Time</span>
+          <span id="timer-display" class="stat-value">00:00</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">🔄</span>
+          <span class="stat-label">Moves</span>
+          <span id="moves-display" class="stat-value">0</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">⭐</span>
+          <span class="stat-label">Score</span>
+          <span id="score-display" class="stat-value">0</span>
+        </div>
+
+        <div id="best-stat-card" class="stat-card">
+          <span class="stat-icon">🏆</span>
+          <span class="stat-label">Best</span>
+          <span id="best-score-display" class="stat-value">-</span>
+        </div>
+      </section>
+
+      <!-- Live Emote Reactions (Only in Online Mode) -->
+      <div id="online-emote-bar" class="online-emote-bar" aria-label="Live Emotes">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Emotes:</span>
+        <button type="button" class="emote-btn" title="Thumbs up">👍</button>
+        <button type="button" class="emote-btn" title="Fire">🔥</button>
+        <button type="button" class="emote-btn" title="Surprised">😮</button>
+        <button type="button" class="emote-btn" title="Party">🎉</button>
+        <button type="button" class="emote-btn" title="Big brain">🧠</button>
+      </div>
+
+      <!-- Floating Turn Notification Banner -->
+      <div id="turn-announcer" class="turn-announcer"></div>
+
+      <!-- 2D Card Grid Board -->
+      <section class="game-board-wrapper" aria-label="Game Board">
+        <div id="game-board" class="game-grid medium" role="region" aria-live="polite">
+          <!-- Cards are dynamically rendered via script.js -->
+        </div>
+      </section>
+
+      <!-- Footer Info -->
+      <footer class="game-footer">
+        <div class="rules-hint">
+          <span>💡 <strong>Tip:</strong> Matching pairs awards bonus turns in multiplayer and +5s in Time Attack!</span>
+          <span class="key-badge">Press 'R' to Restart</span>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Victory & Game Over Modal -->
+    <div id="victory-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-content">
+        <div id="modal-badge" class="modal-badge">🎉</div>
+        <h2 id="modal-title" class="modal-title">Victory!</h2>
+        <p id="modal-subtitle" class="modal-subtitle">You successfully matched all the pairs!</p>
+
+        <!-- Dynamic Star Rating (Solo & Time Attack) -->
+        <div id="star-rating" class="star-rating" aria-label="Rating">
+          <span class="star active">★</span>
+          <span class="star active">★</span>
+          <span class="star active">★</span>
+        </div>
+
+        <!-- Versus Comparison Podium (Multiplayer, VS Computer, Online) -->
+        <div id="multiplayer-winner-card" class="multiplayer-winner-card">
+          <div class="versus-table">
+            <div id="versus-p1-box" class="versus-player-box p1-box">
+              <span id="versus-p1-avatar" class="versus-box-avatar">🦊</span>
+              <span id="versus-p1-name" class="versus-box-name">Player 1</span>
+              <span id="versus-p1-score" class="versus-box-score">0</span>
+              <span id="versus-p1-pairs" class="versus-box-pairs">0 pairs</span>
+            </div>
+            <div id="versus-p2-box" class="versus-player-box p2-box">
+              <span id="versus-p2-avatar" class="versus-box-avatar">🐼</span>
+              <span id="versus-p2-name" class="versus-box-name">Player 2</span>
+              <span id="versus-p2-score" class="versus-box-score">0</span>
+              <span id="versus-p2-pairs" class="versus-box-pairs">0 pairs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- New High Score Banner -->
+        <div id="modal-record-banner" class="record-banner">
+          <span>🌟</span> New High Score Record!
+        </div>
+
+        <!-- Stats Breakdown Grid (Solo / Time Attack) -->
+        <div id="modal-stats-grid" class="modal-stats-grid">
+          <div class="modal-stat-item">
+            <span class="modal-stat-title">Time</span>
+            <span id="modal-final-time" class="modal-stat-data">00:00</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-title">Moves</span>
+            <span id="modal-final-moves" class="modal-stat-data">0</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-title">Score</span>
+            <span id="modal-final-score" class="modal-stat-data">0</span>
+          </div>
+        </div>
+
+        <!-- Modal Action Buttons -->
+        <div class="modal-actions">
+          <button type="button" id="play-again-btn" class="btn btn-primary btn-full">
+            <span>🎮</span> Play Again
+          </button>
+          <button type="button" id="modal-close-btn" class="btn btn-secondary btn-full">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- External vanilla JavaScript logic -->
+    <script src="./script.js"></script>
+  </body>
+</html>

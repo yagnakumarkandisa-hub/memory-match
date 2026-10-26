@@ -1,0 +1,6 @@
+{
+  "name": "Memory Match Game",
+  "description": "An exciting 2D memory card matching game featuring Solo, Time Attack challenge with thrilling countdowns, and 2-Player turn-based multiplayer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
